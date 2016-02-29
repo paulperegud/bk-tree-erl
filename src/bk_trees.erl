@@ -1,8 +1,8 @@
 -module (bk_trees).
--export ([init/1, insert/2, search/2, search/3]).
+-export ([init/1, insert/2, search/2, search/3, size/1]).
 
 init(Word) ->
-    {Word, dict:new()}.
+    {1, Word, dict:new()}.
 
 %
 % { "apple", dict{
@@ -10,14 +10,14 @@ init(Word) ->
 %   3: { "apes", dict{} }
 %     }}
 % }
-insert(Word, {NodeWord, NodeChildren}) ->
+insert(Word, {Size, NodeWord, NodeChildren}) ->
     Dist = levenshtein:distance(Word, NodeWord),
     case dict:is_key(Dist, NodeChildren) of
         true ->
             NewTree = dict:fetch(Dist, NodeChildren),
-            {NodeWord, dict:store(Dist, insert(Word, NewTree), NodeChildren)};
+            {Size+1, NodeWord, dict:store(Dist, insert(Word, NewTree), NodeChildren)};
         false ->
-            {NodeWord, dict:store(Dist, {Word, dict:new()}, NodeChildren)}
+            {Size+1, NodeWord, dict:store(Dist, {1, Word, dict:new()}, NodeChildren)}
     end.
 
 search(Word, Tree) ->
@@ -26,7 +26,7 @@ search(Word, Tree) ->
 search(Word, Tree, Depth) ->
     search(Word, Tree, Depth, []).
 
-search(Word, {NodeWord, NodeChildren}, Depth, Found) ->
+search(Word, {_, NodeWord, NodeChildren}, Depth, Found) ->
     Dist = levenshtein:distance(Word, NodeWord),
     MaxDepth = Dist+Depth,
     MinDepth = Dist-Depth,
@@ -43,3 +43,7 @@ search(Word, {NodeWord, NodeChildren}, Depth, Found) ->
         false ->
             SubtreeRes
     end.
+
+size({Size, _, _}) ->
+    Size.
+    
